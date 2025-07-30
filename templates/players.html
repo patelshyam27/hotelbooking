@@ -1,0 +1,199 @@
+{% extends "base.html" %}
+
+{% block title %}Find Players - CrickConnect{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col">
+            <h1 class="h3 mb-1">Find Cricket Players</h1>
+            <p class="text-muted">Connect with cricket enthusiasts in your area</p>
+        </div>
+    </div>
+
+    <!-- Search Filters -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="GET" class="row g-3">
+                <div class="col-md-3">
+                    <label for="search" class="form-label">Search</label>
+                    <input type="text" class="form-control" id="search" name="search" 
+                           value="{{ search }}" placeholder="Name or username">
+                </div>
+                <div class="col-md-2">
+                    <label for="state" class="form-label">State</label>
+                    <input type="text" class="form-control" id="state" name="state" 
+                           value="{{ state }}" placeholder="State">
+                </div>
+                <div class="col-md-2">
+                    <label for="city" class="form-label">City</label>
+                    <input type="text" class="form-control" id="city" name="city" 
+                           value="{{ city }}" placeholder="City">
+                </div>
+                <div class="col-md-2">
+                    <label for="area" class="form-label">Area</label>
+                    <input type="text" class="form-control" id="area" name="area" 
+                           value="{{ area }}" placeholder="Area">
+                </div>
+                <div class="col-md-2">
+                    <label for="role" class="form-label">Cricket Role</label>
+                    <select class="form-select" id="role" name="role">
+                        <option value="">All Roles</option>
+                        <option value="batsman" {% if role == 'batsman' %}selected{% endif %}>Batsman</option>
+                        <option value="bowler" {% if role == 'bowler' %}selected{% endif %}>Bowler</option>
+                        <option value="all-rounder" {% if role == 'all-rounder' %}selected{% endif %}>All-rounder</option>
+                        <option value="wicket-keeper" {% if role == 'wicket-keeper' %}selected{% endif %}>Wicket-keeper</option>
+                    </select>
+                </div>
+                <div class="col-md-1">
+                    <label for="gender" class="form-label">Gender</label>
+                    <select class="form-select" id="gender" name="gender">
+                        <option value="">All</option>
+                        <option value="male" {% if gender == 'male' %}selected{% endif %}>Male</option>
+                        <option value="female" {% if gender == 'female' %}selected{% endif %}>Female</option>
+                        <option value="other" {% if gender == 'other' %}selected{% endif %}>Other</option>
+                    </select>
+                </div>
+                <div class="col-12">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-search me-1"></i>Search Players
+                    </button>
+                    <a href="{{ url_for('players') }}" class="btn btn-outline-secondary ms-2">
+                        <i class="fas fa-times me-1"></i>Clear Filters
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Results -->
+    {% if players.items %}
+    <div class="row g-4 mb-4">
+        {% for player in players.items %}
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center me-3" 
+                             style="width: 50px; height: 50px;">
+                            <i class="fas fa-user text-white"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <h6 class="mb-0">{{ player.full_name }}</h6>
+                            <small class="text-muted">@{{ player.username }}</small>
+                        </div>
+                        {% if current_user.is_authenticated and current_user.id != player.id %}
+                            {% if current_user.is_following(player) %}
+                            <a href="{{ url_for('unfollow', user_id=player.id) }}" 
+                               class="btn btn-sm btn-outline-danger">
+                                <i class="fas fa-user-minus"></i>
+                            </a>
+                            {% else %}
+                            <a href="{{ url_for('follow', user_id=player.id) }}" 
+                               class="btn btn-sm btn-primary">
+                                <i class="fas fa-user-plus"></i>
+                            </a>
+                            {% endif %}
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        <span class="badge bg-success mb-2">{{ player.cricket_role|title if player.cricket_role else 'Player' }}</span>
+                        {% if player.gender %}
+                        <span class="badge bg-info mb-2">{{ player.gender|title }}</span>
+                        {% endif %}
+                        {% if player.age %}
+                        <span class="badge bg-secondary mb-2">{{ player.age }} years</span>
+                        {% endif %}
+                    </div>
+
+                    <p class="text-muted small mb-2">
+                        <i class="fas fa-map-marker-alt me-1"></i>
+                        {{ player.area }}, {{ player.city }}, {{ player.state }}
+                    </p>
+
+                    {% if player.availability %}
+                    <p class="text-muted small mb-2">
+                        <i class="fas fa-clock me-1"></i>{{ player.availability }}
+                    </p>
+                    {% endif %}
+
+                    {% if player.bio %}
+                    <p class="text-muted small mb-3">{{ player.bio[:100] }}{% if player.bio|length > 100 %}...{% endif %}</p>
+                    {% endif %}
+
+                    <div class="d-flex justify-content-between align-items-center">
+                        <a href="{{ url_for('player_profile', user_id=player.id) }}" 
+                           class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-eye me-1"></i>View Profile
+                        </a>
+                        {% if player.whatsapp %}
+                        <a href="{{ player.whatsapp|whatsapp_link }}" 
+                           class="btn btn-success btn-sm" target="_blank">
+                            <i class="fab fa-whatsapp me-1"></i>WhatsApp
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    {% if players.pages > 1 %}
+    <nav aria-label="Player pagination">
+        <ul class="pagination justify-content-center">
+            {% if players.has_prev %}
+            <li class="page-item">
+                <a class="page-link" href="{{ url_for('players', page=players.prev_num, search=search, state=state, city=city, area=area, role=role, gender=gender) }}">
+                    <i class="fas fa-chevron-left"></i>
+                </a>
+            </li>
+            {% endif %}
+
+            {% for page_num in players.iter_pages() %}
+                {% if page_num %}
+                    {% if page_num != players.page %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('players', page=page_num, search=search, state=state, city=city, area=area, role=role, gender=gender) }}">
+                            {{ page_num }}
+                        </a>
+                    </li>
+                    {% else %}
+                    <li class="page-item active">
+                        <span class="page-link">{{ page_num }}</span>
+                    </li>
+                    {% endif %}
+                {% else %}
+                <li class="page-item disabled">
+                    <span class="page-link">...</span>
+                </li>
+                {% endif %}
+            {% endfor %}
+
+            {% if players.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="{{ url_for('players', page=players.next_num, search=search, state=state, city=city, area=area, role=role, gender=gender) }}">
+                    <i class="fas fa-chevron-right"></i>
+                </a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+
+    {% else %}
+    <!-- No Results -->
+    <div class="text-center py-5">
+        <i class="fas fa-users text-muted mb-3" style="font-size: 4rem; opacity: 0.3;"></i>
+        <h4 class="text-muted">No players found</h4>
+        <p class="text-muted">Try adjusting your search criteria or browse all players</p>
+        <a href="{{ url_for('players') }}" class="btn btn-primary">
+            <i class="fas fa-refresh me-1"></i>View All Players
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,276 @@
+{% extends "base.html" %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section cricket-pattern">
+    <div class="container text-center">
+        <div class="row">
+            <div class="col-lg-8 mx-auto">
+                <h1 class="display-4 fw-bold mb-4">
+                    <i class="fas fa-cricket-ball me-3"></i>
+                    Welcome to CrickConnect
+                </h1>
+                <p class="lead mb-4">
+                    The ultimate platform for cricket enthusiasts to connect, play, learn, and grow together. 
+                    Find players, discover coaching opportunities, watch live matches, and shop for cricket gear!
+                </p>
+                <div class="d-grid gap-2 d-md-flex justify-content-md-center">
+                    {% if not current_user.is_authenticated %}
+                    <a href="{{ url_for('register') }}" class="btn btn-warning btn-lg px-4 me-md-2">
+                        <i class="fas fa-user-plus me-2"></i>Join Now
+                    </a>
+                    <a href="{{ url_for('players') }}" class="btn btn-outline-light btn-lg px-4">
+                        <i class="fas fa-search me-2"></i>Find Players
+                    </a>
+                    {% else %}
+                    <a href="{{ url_for('dashboard') }}" class="btn btn-warning btn-lg px-4 me-md-2">
+                        <i class="fas fa-tachometer-alt me-2"></i>Dashboard
+                    </a>
+                    <a href="{{ url_for('players') }}" class="btn btn-outline-light btn-lg px-4">
+                        <i class="fas fa-users me-2"></i>Explore Players
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Features Section -->
+<section class="py-5">
+    <div class="container">
+        <div class="row text-center mb-5">
+            <div class="col">
+                <h2 class="fw-bold">Why Choose CrickConnect?</h2>
+                <p class="text-muted">Everything you need for your cricket journey in one place</p>
+            </div>
+        </div>
+        
+        <div class="row g-4">
+            <div class="col-md-6 col-lg-3">
+                <div class="card h-100 text-center p-4">
+                    <div class="feature-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <h5>Find Players</h5>
+                    <p class="text-muted">Connect with cricket players in your area by location, role, and skill level.</p>
+                </div>
+            </div>
+            
+            <div class="col-md-6 col-lg-3">
+                <div class="card h-100 text-center p-4">
+                    <div class="feature-icon">
+                        <i class="fas fa-chalkboard-teacher"></i>
+                    </div>
+                    <h5>Coaching Services</h5>
+                    <p class="text-muted">Discover professional coaching opportunities with location-based search and discounts.</p>
+                </div>
+            </div>
+            
+            <div class="col-md-6 col-lg-3">
+                <div class="card h-100 text-center p-4">
+                    <div class="feature-icon">
+                        <i class="fas fa-video"></i>
+                    </div>
+                    <h5>Live Matches</h5>
+                    <p class="text-muted">Watch live cricket matches streamed directly through our platform.</p>
+                </div>
+            </div>
+            
+            <div class="col-md-6 col-lg-3">
+                <div class="card h-100 text-center p-4">
+                    <div class="feature-icon">
+                        <i class="fas fa-store"></i>
+                    </div>
+                    <h5>Cricket Store</h5>
+                    <p class="text-muted">Shop for cricket equipment and accessories from trusted suppliers.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Recent Players Section -->
+{% if recent_users %}
+<section class="py-5 bg-light">
+    <div class="container">
+        <div class="row mb-4">
+            <div class="col">
+                <h3 class="fw-bold">New Players</h3>
+                <p class="text-muted">Recently joined cricket enthusiasts</p>
+            </div>
+            <div class="col-auto">
+                <a href="{{ url_for('players') }}" class="btn btn-primary">
+                    <i class="fas fa-arrow-right me-1"></i>View All
+                </a>
+            </div>
+        </div>
+        
+        <div class="row g-4">
+            {% for user in recent_users %}
+            <div class="col-md-6 col-lg-4">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center me-3" 
+                                 style="width: 50px; height: 50px;">
+                                <i class="fas fa-user text-white"></i>
+                            </div>
+                            <div>
+                                <h6 class="mb-0">{{ user.full_name }}</h6>
+                                <small class="text-muted">{{ user.cricket_role|title if user.cricket_role else 'Player' }}</small>
+                            </div>
+                        </div>
+                        <p class="text-muted small mb-2">
+                            <i class="fas fa-map-marker-alt me-1"></i>
+                            {{ user.city }}, {{ user.state }}
+                        </p>
+                        {% if user.bio %}
+                        <p class="text-muted small">{{ user.bio[:80] }}{% if user.bio|length > 80 %}...{% endif %}</p>
+                        {% endif %}
+                        <div class="d-flex justify-content-between align-items-center">
+                            <a href="{{ url_for('player_profile', user_id=user.id) }}" class="btn btn-sm btn-outline-primary">
+                                View Profile
+                            </a>
+                            {% if user.whatsapp %}
+                            <a href="{{ user.whatsapp|whatsapp_link }}" class="btn btn-sm btn-success" target="_blank">
+                                <i class="fab fa-whatsapp"></i>
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- Live Matches Section -->
+{% if live_matches %}
+<section class="py-5">
+    <div class="container">
+        <div class="row mb-4">
+            <div class="col">
+                <h3 class="fw-bold">Live Matches</h3>
+                <p class="text-muted">Watch cricket matches happening now</p>
+            </div>
+            <div class="col-auto">
+                <a href="{{ url_for('live_matches') }}" class="btn btn-primary">
+                    <i class="fas fa-arrow-right me-1"></i>View All
+                </a>
+            </div>
+        </div>
+        
+        <div class="row g-4">
+            {% for match in live_matches %}
+            <div class="col-md-6 col-lg-4">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center justify-content-between mb-3">
+                            <h6 class="mb-0">{{ match.title }}</h6>
+                            <span class="badge bg-danger">
+                                <i class="fas fa-circle me-1" style="font-size: 0.7em;"></i>LIVE
+                            </span>
+                        </div>
+                        {% if match.team1 and match.team2 %}
+                        <div class="text-center mb-3">
+                            <strong>{{ match.team1 }}</strong> vs <strong>{{ match.team2 }}</strong>
+                        </div>
+                        {% endif %}
+                        {% if match.description %}
+                        <p class="text-muted small">{{ match.description[:100] }}{% if match.description|length > 100 %}...{% endif %}</p>
+                        {% endif %}
+                        <a href="{{ url_for('live_matches') }}" class="btn btn-primary btn-sm w-100">
+                            <i class="fas fa-play me-1"></i>Watch Now
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- Coaching Section -->
+{% if coaching_ads %}
+<section class="py-5 bg-light">
+    <div class="container">
+        <div class="row mb-4">
+            <div class="col">
+                <h3 class="fw-bold">Featured Coaching</h3>
+                <p class="text-muted">Professional cricket coaching opportunities</p>
+            </div>
+            <div class="col-auto">
+                <a href="{{ url_for('coaching') }}" class="btn btn-primary">
+                    <i class="fas fa-arrow-right me-1"></i>View All
+                </a>
+            </div>
+        </div>
+        
+        <div class="row g-4">
+            {% for coaching in coaching_ads %}
+            <div class="col-md-6 col-lg-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h6 class="mb-2">{{ coaching.title }}</h6>
+                        <p class="text-muted small mb-2">
+                            <i class="fas fa-user me-1"></i>{{ coaching.coach_name }}
+                        </p>
+                        <p class="text-muted small mb-2">
+                            <i class="fas fa-map-marker-alt me-1"></i>{{ coaching.city }}, {{ coaching.state }}
+                        </p>
+                        {% if coaching.price %}
+                        <div class="mb-3">
+                            {% if coaching.discount_percentage > 0 %}
+                            <span class="text-decoration-line-through text-muted">₹{{ coaching.price }}</span>
+                            <span class="fw-bold text-success ms-2">₹{{ (coaching.price * (100 - coaching.discount_percentage) / 100)|round|int }}</span>
+                            <span class="badge bg-warning text-dark ms-1">{{ coaching.discount_percentage }}% OFF</span>
+                            {% else %}
+                            <span class="fw-bold">₹{{ coaching.price }}</span>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                        <div class="d-flex justify-content-between align-items-center">
+                            <a href="{{ url_for('coaching') }}" class="btn btn-sm btn-outline-primary">
+                                View Details
+                            </a>
+                            {% if coaching.contact_whatsapp %}
+                            <a href="{{ coaching.contact_whatsapp|whatsapp_link('Hi! I am interested in your coaching services.') }}" 
+                               class="btn btn-sm btn-success" target="_blank">
+                                <i class="fab fa-whatsapp"></i>
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- Call to Action -->
+<section class="py-5" style="background: linear-gradient(135deg, var(--cricket-green), var(--cricket-blue));">
+    <div class="container text-center text-white">
+        <div class="row">
+            <div class="col-lg-8 mx-auto">
+                <h3 class="fw-bold mb-3">Ready to Join the Cricket Community?</h3>
+                <p class="mb-4">Connect with players, find coaching, watch matches, and shop for gear - all in one place!</p>
+                {% if not current_user.is_authenticated %}
+                <a href="{{ url_for('register') }}" class="btn btn-warning btn-lg px-4">
+                    <i class="fas fa-user-plus me-2"></i>Get Started Today
+                </a>
+                {% else %}
+                <a href="{{ url_for('players') }}" class="btn btn-warning btn-lg px-4">
+                    <i class="fas fa-users me-2"></i>Explore Players
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
