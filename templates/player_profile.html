@@ -1,0 +1,245 @@
+{% extends "base.html" %}
+
+{% block title %}{{ user.full_name }} - CrickConnect{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Profile Header -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <div class="d-flex align-items-center">
+                        <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center me-4" 
+                             style="width: 80px; height: 80px;">
+                            <i class="fas fa-user text-white" style="font-size: 2rem;"></i>
+                        </div>
+                        <div>
+                            <h2 class="mb-1">{{ user.full_name }}</h2>
+                            <p class="text-muted mb-1">@{{ user.username }}</p>
+                            <div class="d-flex align-items-center">
+                                <span class="badge bg-success me-2">{{ user.cricket_role|title if user.cricket_role else 'Player' }}</span>
+                                {% if user.gender %}
+                                <span class="badge bg-info me-2">{{ user.gender|title }}</span>
+                                {% endif %}
+                                {% if user.age %}
+                                <span class="badge bg-secondary">{{ user.age }} years old</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 text-md-end">
+                    {% if current_user.is_authenticated and current_user.id != user.id %}
+                    <div class="mb-3">
+                        {% if is_following %}
+                        <a href="{{ url_for('unfollow', user_id=user.id) }}" class="btn btn-outline-danger">
+                            <i class="fas fa-user-minus me-1"></i>Unfollow
+                        </a>
+                        {% else %}
+                        <a href="{{ url_for('follow', user_id=user.id) }}" class="btn btn-primary">
+                            <i class="fas fa-user-plus me-1"></i>Follow
+                        </a>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                    
+                    {% if user.whatsapp %}
+                    <a href="{{ user.whatsapp|whatsapp_link('Hi! I found your profile on CrickConnect and would like to connect for cricket.') }}" 
+                       class="btn btn-success" target="_blank">
+                        <i class="fab fa-whatsapp me-1"></i>Contact on WhatsApp
+                    </a>
+                    {% endif %}
+                    
+                    {% if current_user.is_authenticated and current_user.id == user.id %}
+                    <a href="{{ url_for('edit_profile') }}" class="btn btn-outline-primary">
+                        <i class="fas fa-edit me-1"></i>Edit Profile
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Main Profile Info -->
+        <div class="col-md-8">
+            <!-- Bio Section -->
+            {% if user.bio %}
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-user-circle me-2"></i>About</h5>
+                </div>
+                <div class="card-body">
+                    <p class="mb-0">{{ user.bio }}</p>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Cricket Details -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-cricket-ball me-2"></i>Cricket Profile</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p class="mb-2">
+                                <strong><i class="fas fa-user-tag me-2"></i>Role:</strong> 
+                                {{ user.cricket_role|title if user.cricket_role else 'Not specified' }}
+                            </p>
+                            <p class="mb-2">
+                                <strong><i class="fas fa-clock me-2"></i>Availability:</strong> 
+                                {{ user.availability if user.availability else 'Not specified' }}
+                            </p>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="mb-2">
+                                <strong><i class="fas fa-birthday-cake me-2"></i>Age:</strong> 
+                                {{ user.age if user.age else 'Not specified' }}
+                            </p>
+                            <p class="mb-2">
+                                <strong><i class="fas fa-venus-mars me-2"></i>Gender:</strong> 
+                                {{ user.gender|title if user.gender else 'Not specified' }}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Location Details -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-map-marker-alt me-2"></i>Location</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <p class="mb-2">
+                                <strong>State:</strong><br>
+                                <span class="text-muted">{{ user.state }}</span>
+                            </p>
+                        </div>
+                        <div class="col-md-4">
+                            <p class="mb-2">
+                                <strong>City:</strong><br>
+                                <span class="text-muted">{{ user.city }}</span>
+                            </p>
+                        </div>
+                        <div class="col-md-4">
+                            <p class="mb-2">
+                                <strong>Area:</strong><br>
+                                <span class="text-muted">{{ user.area }}</span>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Contact Information -->
+            {% if user.phone or user.whatsapp %}
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-phone me-2"></i>Contact Information</h5>
+                </div>
+                <div class="card-body">
+                    {% if user.phone %}
+                    <p class="mb-2">
+                        <strong><i class="fas fa-phone me-2"></i>Phone:</strong> 
+                        <a href="tel:{{ user.phone }}" class="text-decoration-none">{{ user.phone }}</a>
+                    </p>
+                    {% endif %}
+                    {% if user.whatsapp %}
+                    <p class="mb-0">
+                        <strong><i class="fab fa-whatsapp me-2"></i>WhatsApp:</strong> 
+                        <a href="{{ user.whatsapp|whatsapp_link }}" target="_blank" class="text-success text-decoration-none">
+                            {{ user.whatsapp }} <i class="fas fa-external-link-alt ms-1 small"></i>
+                        </a>
+                    </p>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-md-4">
+            <!-- Stats Card -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i>Profile Stats</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-6">
+                            <h4 class="text-primary mb-1">{{ followers_count }}</h4>
+                            <small class="text-muted">Followers</small>
+                        </div>
+                        <div class="col-6">
+                            <h4 class="text-success mb-1">{{ following_count }}</h4>
+                            <small class="text-muted">Following</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Member Since -->
+            <div class="card mb-4">
+                <div class="card-body text-center">
+                    <i class="fas fa-calendar-alt text-muted mb-2" style="font-size: 2rem;"></i>
+                    <h6 class="mb-1">Member Since</h6>
+                    <p class="text-muted mb-0">{{ user.created_at.strftime('%B %Y') }}</p>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            {% if current_user.is_authenticated and current_user.id != user.id %}
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h6 class="mb-0">Quick Actions</h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        {% if user.whatsapp %}
+                        <a href="{{ user.whatsapp|whatsapp_link('Hi! I found your profile on CrickConnect. Would you like to play cricket together?') }}" 
+                           class="btn btn-success btn-sm" target="_blank">
+                            <i class="fab fa-whatsapp me-1"></i>Invite to Play
+                        </a>
+                        {% endif %}
+                        
+                        {% if user.whatsapp %}
+                        <a href="{{ user.whatsapp|whatsapp_link('Hi! I saw your profile on CrickConnect. Are you available for cricket practice?') }}" 
+                           class="btn btn-outline-primary btn-sm" target="_blank">
+                            <i class="fas fa-running me-1"></i>Practice Together
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Similar Players -->
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">Find Similar Players</h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{{ url_for('players', role=user.cricket_role) }}" class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-users me-1"></i>Other {{ user.cricket_role|title }}s
+                        </a>
+                        <a href="{{ url_for('players', city=user.city, state=user.state) }}" class="btn btn-outline-secondary btn-sm">
+                            <i class="fas fa-map-marker-alt me-1"></i>Players in {{ user.city }}
+                        </a>
+                        {% if user.gender %}
+                        <a href="{{ url_for('players', gender=user.gender) }}" class="btn btn-outline-info btn-sm">
+                            <i class="fas fa-venus-mars me-1"></i>{{ user.gender|title }} Players
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

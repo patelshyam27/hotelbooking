@@ -1,0 +1,144 @@
+{% extends "base.html" %}
+
+{% block title %}Live Matches - CrickConnect{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col">
+            <h1 class="h3 mb-1">
+                <i class="fas fa-video me-2 text-danger"></i>Live Cricket Matches
+            </h1>
+            <p class="text-muted">Watch live cricket matches streaming now</p>
+        </div>
+    </div>
+
+    {% if matches %}
+    <div class="row g-4">
+        {% for match in matches %}
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">{{ match.title }}</h5>
+                    <span class="badge bg-danger">
+                        <i class="fas fa-circle me-1" style="font-size: 0.7em;"></i>LIVE
+                    </span>
+                </div>
+                
+                {% if match.youtube_url %}
+                <div class="ratio ratio-16x9">
+                    {% set youtube_id = match.youtube_url.split('/')[-1].split('?')[0] if 'youtu.be' in match.youtube_url else match.youtube_url.split('v=')[1].split('&')[0] if 'watch?v=' in match.youtube_url else '' %}
+                    {% if youtube_id %}
+                    <iframe src="https://www.youtube.com/embed/{{ youtube_id }}?autoplay=0&rel=0" 
+                            frameborder="0" 
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                            allowfullscreen>
+                    </iframe>
+                    {% else %}
+                    <div class="d-flex align-items-center justify-content-center bg-light">
+                        <div class="text-center">
+                            <i class="fas fa-video text-muted mb-2" style="font-size: 3rem;"></i>
+                            <p class="text-muted">Video not available</p>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+                {% else %}
+                <div class="ratio ratio-16x9">
+                    <div class="d-flex align-items-center justify-content-center bg-light">
+                        <div class="text-center">
+                            <i class="fas fa-video-slash text-muted mb-2" style="font-size: 3rem;"></i>
+                            <p class="text-muted">Stream not available</p>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                <div class="card-body">
+                    {% if match.team1 and match.team2 %}
+                    <div class="text-center mb-3">
+                        <h4 class="text-primary">{{ match.team1 }} <span class="text-muted">vs</span> {{ match.team2 }}</h4>
+                    </div>
+                    {% endif %}
+
+                    {% if match.description %}
+                    <p class="text-muted mb-3">{{ match.description }}</p>
+                    {% endif %}
+
+                    <div class="d-flex justify-content-between align-items-center">
+                        <small class="text-muted">
+                            <i class="fas fa-calendar-alt me-1"></i>
+                            Started {{ match.created_at.strftime('%B %d, %Y at %I:%M %p') }}
+                        </small>
+                        {% if match.youtube_url %}
+                        <a href="{{ match.youtube_url }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                            <i class="fab fa-youtube me-1"></i>Watch on YouTube
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Add Match Button for Admins -->
+    {% if current_user.is_authenticated and (current_user.is_admin or current_user.is_owner) %}
+    <div class="text-center mt-5">
+        <a href="{{ url_for('add_match') }}" class="btn btn-primary">
+            <i class="fas fa-plus me-1"></i>Add Live Match
+        </a>
+    </div>
+    {% endif %}
+
+    {% else %}
+    <!-- No Live Matches -->
+    <div class="text-center py-5">
+        <i class="fas fa-video text-muted mb-3" style="font-size: 4rem; opacity: 0.3;"></i>
+        <h4 class="text-muted">No live matches at the moment</h4>
+        <p class="text-muted">Check back later for live cricket action!</p>
+        
+        {% if current_user.is_authenticated and (current_user.is_admin or current_user.is_owner) %}
+        <a href="{{ url_for('add_match') }}" class="btn btn-primary mt-3">
+            <i class="fas fa-plus me-1"></i>Add Live Match
+        </a>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    <!-- Features Section -->
+    <div class="row mt-5">
+        <div class="col-md-4">
+            <div class="text-center">
+                <i class="fas fa-broadcast-tower text-primary mb-3" style="font-size: 2.5rem;"></i>
+                <h5>Live Streaming</h5>
+                <p class="text-muted small">Watch cricket matches as they happen with high-quality streaming.</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="text-center">
+                <i class="fas fa-mobile-alt text-success mb-3" style="font-size: 2.5rem;"></i>
+                <h5>Mobile Friendly</h5>
+                <p class="text-muted small">Enjoy matches on any device - desktop, tablet, or mobile.</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="text-center">
+                <i class="fas fa-users text-warning mb-3" style="font-size: 2.5rem;"></i>
+                <h5>Community</h5>
+                <p class="text-muted small">Connect with fellow cricket fans and discuss the game.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block scripts %}
+<script>
+// Auto-refresh page every 5 minutes to check for new live matches
+setTimeout(function() {
+    location.reload();
+}, 300000); // 5 minutes
+</script>
+{% endblock %}
+{% endblock %}

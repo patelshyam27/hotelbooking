@@ -1,0 +1,199 @@
+{% extends "base.html" %}
+
+{% block title %}Coaching Services - CrickConnect{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col">
+            <h1 class="h3 mb-1">Cricket Coaching Services</h1>
+            <p class="text-muted">Find professional cricket coaching in your area</p>
+        </div>
+    </div>
+
+    <!-- Search Filters -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="GET" class="row g-3">
+                <div class="col-md-4">
+                    <label for="search" class="form-label">Search</label>
+                    <input type="text" class="form-control" id="search" name="search" 
+                           value="{{ search }}" placeholder="Coach name or service">
+                </div>
+                <div class="col-md-3">
+                    <label for="state" class="form-label">State</label>
+                    <input type="text" class="form-control" id="state" name="state" 
+                           value="{{ state }}" placeholder="State">
+                </div>
+                <div class="col-md-3">
+                    <label for="city" class="form-label">City</label>
+                    <input type="text" class="form-control" id="city" name="city" 
+                           value="{{ city }}" placeholder="City">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">&nbsp;</label>
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-search me-1"></i>Search
+                        </button>
+                    </div>
+                </div>
+                <div class="col-12">
+                    <a href="{{ url_for('coaching') }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-times me-1"></i>Clear Filters
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Results -->
+    {% if coaching_ads.items %}
+    <div class="row g-4 mb-4">
+        {% for coaching in coaching_ads.items %}
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <h5 class="card-title mb-0">{{ coaching.title }}</h5>
+                        {% if coaching.discount_percentage > 0 %}
+                        <span class="badge bg-warning text-dark">{{ coaching.discount_percentage }}% OFF</span>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        <p class="text-muted mb-1">
+                            <i class="fas fa-user me-2"></i>{{ coaching.coach_name }}
+                        </p>
+                        <p class="text-muted mb-1">
+                            <i class="fas fa-map-marker-alt me-2"></i>{{ coaching.area }}, {{ coaching.city }}, {{ coaching.state }}
+                        </p>
+                        {% if coaching.location %}
+                        <p class="text-muted mb-1">
+                            <i class="fas fa-location-arrow me-2"></i>{{ coaching.location }}
+                        </p>
+                        {% endif %}
+                    </div>
+
+                    {% if coaching.description %}
+                    <p class="text-muted small mb-3">{{ coaching.description[:120] }}{% if coaching.description|length > 120 %}...{% endif %}</p>
+                    {% endif %}
+
+                    <!-- Pricing -->
+                    {% if coaching.price %}
+                    <div class="mb-3">
+                        {% if coaching.discount_percentage > 0 %}
+                        <div class="d-flex align-items-center">
+                            <span class="text-decoration-line-through text-muted me-2">₹{{ coaching.price }}</span>
+                            <span class="h5 text-success mb-0">₹{{ (coaching.price * (100 - coaching.discount_percentage) / 100)|round|int }}</span>
+                        </div>
+                        {% if coaching.coupon_code %}
+                        <small class="text-muted">Use code: <strong>{{ coaching.coupon_code }}</strong></small>
+                        {% endif %}
+                        {% else %}
+                        <span class="h5 text-primary">₹{{ coaching.price }}</span>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+
+                    <!-- Contact Actions -->
+                    <div class="d-flex justify-content-between align-items-center">
+                        {% if coaching.contact_phone %}
+                        <a href="tel:{{ coaching.contact_phone }}" class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-phone me-1"></i>Call
+                        </a>
+                        {% endif %}
+                        
+                        {% if coaching.contact_whatsapp %}
+                        <a href="{{ coaching.contact_whatsapp|whatsapp_link('Hi! I am interested in your cricket coaching services listed on CrickConnect.') }}" 
+                           class="btn btn-success btn-sm" target="_blank">
+                            <i class="fab fa-whatsapp me-1"></i>WhatsApp
+                        </a>
+                        {% endif %}
+                        
+                        {% if not coaching.contact_phone and not coaching.contact_whatsapp %}
+                        <span class="text-muted small">Contact info not available</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="card-footer bg-light">
+                    <small class="text-muted">
+                        <i class="fas fa-calendar-alt me-1"></i>
+                        Listed {{ coaching.created_at.strftime('%B %d, %Y') }}
+                    </small>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    {% if coaching_ads.pages > 1 %}
+    <nav aria-label="Coaching pagination">
+        <ul class="pagination justify-content-center">
+            {% if coaching_ads.has_prev %}
+            <li class="page-item">
+                <a class="page-link" href="{{ url_for('coaching', page=coaching_ads.prev_num, search=search, state=state, city=city) }}">
+                    <i class="fas fa-chevron-left"></i>
+                </a>
+            </li>
+            {% endif %}
+
+            {% for page_num in coaching_ads.iter_pages() %}
+                {% if page_num %}
+                    {% if page_num != coaching_ads.page %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('coaching', page=page_num, search=search, state=state, city=city) }}">
+                            {{ page_num }}
+                        </a>
+                    </li>
+                    {% else %}
+                    <li class="page-item active">
+                        <span class="page-link">{{ page_num }}</span>
+                    </li>
+                    {% endif %}
+                {% else %}
+                <li class="page-item disabled">
+                    <span class="page-link">...</span>
+                </li>
+                {% endif %}
+            {% endfor %}
+
+            {% if coaching_ads.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="{{ url_for('coaching', page=coaching_ads.next_num, search=search, state=state, city=city) }}">
+                    <i class="fas fa-chevron-right"></i>
+                </a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+
+    {% else %}
+    <!-- No Results -->
+    <div class="text-center py-5">
+        <i class="fas fa-chalkboard-teacher text-muted mb-3" style="font-size: 4rem; opacity: 0.3;"></i>
+        <h4 class="text-muted">No coaching services found</h4>
+        <p class="text-muted">Try adjusting your search criteria or browse all coaching services</p>
+        <a href="{{ url_for('coaching') }}" class="btn btn-primary">
+            <i class="fas fa-refresh me-1"></i>View All Coaching
+        </a>
+    </div>
+    {% endif %}
+
+    <!-- Call to Action for Coaches -->
+    {% if current_user.is_authenticated and (current_user.is_admin or current_user.is_owner) %}
+    <div class="card bg-light mt-5">
+        <div class="card-body text-center">
+            <h5 class="card-title">Are you a cricket coach?</h5>
+            <p class="card-text">List your coaching services and reach more students in your area.</p>
+            <a href="{{ url_for('add_coaching') }}" class="btn btn-primary">
+                <i class="fas fa-plus me-1"></i>Add Coaching Service
+            </a>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

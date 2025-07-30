@@ -1,0 +1,200 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Users - CrickConnect{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col">
+            <h1 class="h3 mb-1">
+                <i class="fas fa-users-cog me-2"></i>User Management
+            </h1>
+            <p class="text-muted">Manage all CrickConnect users and permissions</p>
+        </div>
+    </div>
+
+    <!-- Search -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="GET" class="row g-3">
+                <div class="col-md-6">
+                    <label for="search" class="form-label">Search Users</label>
+                    <input type="text" class="form-control" id="search" name="search" 
+                           value="{{ search }}" placeholder="Name, username, or email">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">&nbsp;</label>
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-search me-1"></i>Search
+                        </button>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">&nbsp;</label>
+                    <div class="d-grid">
+                        <a href="{{ url_for('admin_users') }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-times me-1"></i>Clear
+                        </a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Users Table -->
+    {% if users.items %}
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Users ({{ users.total }} total)</h5>
+            <small class="text-muted">Page {{ users.page }} of {{ users.pages }}</small>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>User</th>
+                            <th>Contact</th>
+                            <th>Location</th>
+                            <th>Cricket Info</th>
+                            <th>Status</th>
+                            <th>Joined</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for user in users.items %}
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center me-3" 
+                                         style="width: 40px; height: 40px;">
+                                        <i class="fas fa-user text-white small"></i>
+                                    </div>
+                                    <div>
+                                        <h6 class="mb-0">{{ user.full_name }}</h6>
+                                        <small class="text-muted">@{{ user.username }}</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <div>
+                                    <small class="d-block">{{ user.email }}</small>
+                                    {% if user.phone %}
+                                    <small class="text-muted">{{ user.phone }}</small>
+                                    {% endif %}
+                                </div>
+                            </td>
+                            <td>
+                                <small>{{ user.city }}, {{ user.state }}</small>
+                            </td>
+                            <td>
+                                <div>
+                                    <span class="badge bg-secondary small">{{ user.cricket_role|title if user.cricket_role else 'Player' }}</span>
+                                    {% if user.age %}
+                                    <br><small class="text-muted">{{ user.age }} years</small>
+                                    {% endif %}
+                                </div>
+                            </td>
+                            <td>
+                                {% if user.is_owner %}
+                                <span class="badge bg-danger">Owner</span>
+                                {% elif user.is_admin and user.admin_approved %}
+                                <span class="badge bg-success">Admin</span>
+                                {% elif user.is_admin and not user.admin_approved %}
+                                <span class="badge bg-warning">Pending Admin</span>
+                                {% else %}
+                                <span class="badge bg-primary">User</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <small>{{ user.created_at.strftime('%b %d, %Y') }}</small>
+                            </td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <a href="{{ url_for('player_profile', user_id=user.id) }}" 
+                                       class="btn btn-outline-primary btn-sm">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    {% if not user.is_owner and not user.is_admin %}
+                                    <a href="{{ url_for('approve_admin', user_id=user.id) }}" 
+                                       class="btn btn-outline-success btn-sm"
+                                       onclick="return confirm('Make {{ user.full_name }} an admin?')">
+                                        <i class="fas fa-user-cog"></i>
+                                    </a>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    {% if users.pages > 1 %}
+    <nav aria-label="Users pagination" class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% if users.has_prev %}
+            <li class="page-item">
+                <a class="page-link" href="{{ url_for('admin_users', page=users.prev_num, search=search) }}">
+                    <i class="fas fa-chevron-left"></i>
+                </a>
+            </li>
+            {% endif %}
+
+            {% for page_num in users.iter_pages() %}
+                {% if page_num %}
+                    {% if page_num != users.page %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('admin_users', page=page_num, search=search) }}">
+                            {{ page_num }}
+                        </a>
+                    </li>
+                    {% else %}
+                    <li class="page-item active">
+                        <span class="page-link">{{ page_num }}</span>
+                    </li>
+                    {% endif %}
+                {% else %}
+                <li class="page-item disabled">
+                    <span class="page-link">...</span>
+                </li>
+                {% endif %}
+            {% endfor %}
+
+            {% if users.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="{{ url_for('admin_users', page=users.next_num, search=search) }}">
+                    <i class="fas fa-chevron-right"></i>
+                </a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+
+    {% else %}
+    <!-- No Users -->
+    <div class="text-center py-5">
+        <i class="fas fa-users text-muted mb-3" style="font-size: 4rem; opacity: 0.3;"></i>
+        <h4 class="text-muted">No users found</h4>
+        <p class="text-muted">Try adjusting your search criteria</p>
+        <a href="{{ url_for('admin_users') }}" class="btn btn-primary">
+            <i class="fas fa-refresh me-1"></i>View All Users
+        </a>
+    </div>
+    {% endif %}
+
+    <!-- Back to Dashboard -->
+    <div class="text-center mt-4">
+        <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-1"></i>Back to Admin Dashboard
+        </a>
+    </div>
+</div>
+{% endblock %}
